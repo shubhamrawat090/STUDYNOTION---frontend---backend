@@ -3,6 +3,7 @@ const OTP = require("../models/OTP");
 const otpGenerator = require("otp-generator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mailSender = require("../utils/mailSender");
 require("dotenv").config();
 
 // sendOTP - HW: Write validations like checking email.
@@ -233,10 +234,79 @@ exports.login = async (req, res) => {
 
 // changePassword
 exports.changePassword = async (req, res) => {
-  //get data from req body
-  //get oldPassword, newPassword, confirmNewPassword
-  //validation
-  //update password in database
-  //send mail - password updated(using mailSender in utils)
-  //return response
+  try {
+    //get data from req body
+    //get oldPassword, newPassword, confirmNewPassword
+    const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
+
+    //validation
+
+    // check valid email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "No user exists by the mentioned email.",
+      });
+    }
+
+    //check if correct oldpassword is mentioned
+    const oldPasswordMatching = await bcrypt.compare(
+      oldPassword,
+      user.password
+    );
+    if (!oldPasswordMatching) {
+      res.status(401).json({
+        success: false,
+        message: "Incorrect old password.",
+      });
+    }
+
+    // check if old password and new password aren't equal
+    if (oldPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be the same as old password",
+      });
+    }
+
+    // check if newPassword and confirmNewPassword are equal
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password and confirm new password are different.",
+      });
+    }
+
+    // hash the newPassword
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    //update password in database
+    const updatedUser = await User.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+    console.log(updatedUser);
+
+    //send mail - password updated(using mailSender in utils)
+    await mailSender(
+      email,
+      "Password Changed Successfully",
+      `Password has been successfully changed for the user: ${email}`
+    );
+
+    //return response
+    return res.status(200).json({
+      success: true,
+      message: "Password Changed Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: true,
+      message: "Changing Password failed, try again",
+    });
+  }
 };

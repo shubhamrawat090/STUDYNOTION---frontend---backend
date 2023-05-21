@@ -1,36 +1,30 @@
 const Profile = require("../models/Profile");
 const User = require("../models/User");
+const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
 exports.updateProfile = async (req, res) => {
   try {
-    //get data
-    const { dateOfBirth = "", about = "", contactNumber, gender } = req.body;
+    // Get data
+    const { dateOfBirth = "", about = "", contactNumber } = req.body;
 
-    //get userId
+    // Get userId
     const id = req.user.id;
 
-    //validation
-    if (!contactNumber || !gender || !id) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-    }
-
-    //find profile
+    // Find profile
     const userDetails = await User.findById(id); // find the userDetail
 
-    // get profile ID from user (additionalDetails)
+    // Get profile ID from user (additionalDetails)
     const profileId = userDetails.additionalDetails;
 
-    // get profile from profileId
+    // Get profile from profileId
     const profileDetails = await Profile.findById(profileId);
 
-    //update profile
+    // Update profile
     profileDetails.dateOfBirth = dateOfBirth;
     profileDetails.about = about;
-    profileDetails.gender = gender;
     profileDetails.contactNumber = contactNumber;
+
+    // Save the updated profile
     await profileDetails.save();
 
     //return response

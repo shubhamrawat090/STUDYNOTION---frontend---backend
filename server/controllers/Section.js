@@ -10,7 +10,7 @@ exports.createSection = async (req, res) => {
     if (!sectionName || !courseId) {
       return res.status(400).json({
         success: false,
-        message: "Missing Properties",
+        message: "Missing required properties",
       });
     }
 
@@ -24,9 +24,14 @@ exports.createSection = async (req, res) => {
         $push: { courseContent: newSection._id },
       },
       { new: true }
-    );
-
-    // HW: Use populate to replace sections/sub-sections both in the updatedCourseDetails
+    )
+      .populate({
+        path: "courseContent",
+        populate: {
+          path: "subSection",
+        },
+      }) // HW: Use populate to replace sections/sub-sections both in the updatedCourseDetails
+      .exec();
 
     //return response
     return res.status(200).json({
@@ -74,8 +79,7 @@ exports.updateSection = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Unable to update Section, please try again",
-      error: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -99,7 +103,7 @@ exports.deleteSection = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Unable to delete Section, please try again",
+      message: "Internal server error",
       error: error.message,
     });
   }

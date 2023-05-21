@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const mailSender = require("../utils/mailSender");
+const emailTemplate = require("../mail/templates/emailVerificationTemplate");
 
 const OPTSchema = new mongoose.Schema({
   email: {
@@ -13,7 +14,7 @@ const OPTSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
-    expires: 5 * 60,
+    expires: 5 * 60, // The document will be automatically deleted after 5 minutes of its creation time
   },
 });
 
@@ -26,10 +27,10 @@ async function sendVerificationEmail(email, otp) {
     const mailResponse = await mailSender(
       email,
       "Verification Email from StudyNotion",
-      otp
+      emailTemplate(otp)
     );
 
-    console.log("Email send successfully: ", mailResponse);
+    console.log("Email send successfully: ", mailResponse.response);
   } catch (error) {
     console.error("Error occurred while send mail: ", error);
     throw error;
@@ -38,10 +39,12 @@ async function sendVerificationEmail(email, otp) {
 
 // Calling the pre middleware
 OPTSchema.pre("save", async function (next) {
-  // we send current object's email and otp and call the sendVerificationEmail() function
-  await sendVerificationEmail(this.email, this.otp);
+  console.log("New document saved to database");
 
-  // move on to next middleware
+  // Only send an email when a new document is created
+  if (this.isNew) {
+    await sendVerificationEmail(this.email, this.otp);
+  }
   next();
 });
 

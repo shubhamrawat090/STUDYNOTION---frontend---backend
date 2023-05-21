@@ -9,7 +9,7 @@ exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
   }
 
   if (quality) {
-    options.height = height;
+    options.quality = quality;
   }
 
   options.resource_type = "auto";

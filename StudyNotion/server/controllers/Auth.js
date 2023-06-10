@@ -142,7 +142,12 @@ exports.login = async (req, res) => {
     // Generate JWT token and Compare Password
     if (await bcrypt.compare(password, user.password)) {
       const token = jwt.sign(
-        { email: user.email, id: user._id, accountType: user.accountType },
+        // Create Payload
+        {
+          email: user.email,
+          id: user._id,
+          accountType: user.accountType,
+        },
         process.env.JWT_SECRET,
         {
           expiresIn: "24h",
@@ -178,6 +183,7 @@ exports.login = async (req, res) => {
     });
   }
 };
+
 // Send OTP For Email Verification
 exports.sendotp = async (req, res) => {
   try {
@@ -202,6 +208,7 @@ exports.sendotp = async (req, res) => {
       lowerCaseAlphabets: false,
       specialChars: false,
     });
+
     const result = await OTP.findOne({ otp: otp });
     console.log("Result is Generate OTP Func");
     console.log("OTP", otp);

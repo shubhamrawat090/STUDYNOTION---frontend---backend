@@ -24,13 +24,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
+    // Accept all requests from our frontend which is hosted at localhost:3000
     origin: "http://localhost:3000",
     credentials: true,
   })
 );
 
+// Any file type data to be uploaded is used here
 app.use(
   fileUpload({
+    // Store in temp and generate a url accordingly
     useTempFiles: true,
     tempFileDir: "/tmp",
   })
@@ -39,7 +42,7 @@ app.use(
 //cloudinary connection
 cloudinaryConnect();
 
-//routes
+//mount all the routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/course", courseRoutes);
@@ -53,6 +56,7 @@ app.get("/", (req, res) => {
   });
 });
 
+// Activate the server
 app.listen(PORT, () => {
   console.log(`App is running at PORT: ${PORT}`);
 });
